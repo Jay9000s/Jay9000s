@@ -1,0 +1,90 @@
+#	Microservice on AWS
+#	Created microservice using API Gateway, Lambda, DynamoDB 
+#      API is pointing to the lambdafunction, and our DynamoDb is being accessed by the 
+#      lambda function
+#
+#1) Created an IAM Role for my Lambda function with the permission that allows delete, get, put,
+#   create logsgroup, logstream, logsevents to my DynamoDB
+#
+#2) Created lambdafunction Lambdafunctionoverhttps with runtime Python 3.8 
+#  Deployed and Test this Lambdafunction with this python template to interact with the database
+  that have lambdafunction interact with the database
+      from __future__ import print_function
+from __future__ import print_function
+
+import boto3
+import json
+
+print('Loading function')
+
+
+def lambda_handler(event, context):
+    '''Provide an event that contains the following keys:
+
+      - operation: one of the operations in the operations dict below
+      - tableName: required for operations that interact with DynamoDB
+      - payload: a parameter to pass to the operation being performed
+    '''
+    #print("Received event: " + json.dumps(event, indent=2))
+
+    operation = event['operation']
+
+    if 'tableName' in event:
+        dynamo = boto3.resource('dynamodb').Table(event['tableName'])
+
+    operations = {
+        'create': lambda x: dynamo.put_item(**x),
+        'read': lambda x: dynamo.get_item(**x),
+        'update': lambda x: dynamo.update_item(**x),
+        'delete': lambda x: dynamo.delete_item(**x),
+        'list': lambda x: dynamo.scan(**x),
+        'echo': lambda x: x,
+        'ping': lambda x: 'pong'
+    }
+
+    if operation in operations:
+        return operations[operation](event.get('payload'))
+    else:
+        raise ValueError('Unrecognized operation "{}"'.format(operation))
+#2a) Lambdafunction Test
+     {
+    "operation": "echo",
+    "payload": {
+        "somekey1": "somevalue1",
+        "somekey2": "somevalue2"
+    }
+}
+#3)Created a DynamoDB table with partion key "id"
+#4)Created API Gateway that will point to the lambdafunction
+#    created a Rest API with
+#       Post Method 
+#5)Create a Postman Acount
+#Post my API gateway invoke Url https://d1mvbe7w2m.execute-api.us-east-1.amazonaws.com/prod/
+    
+    
+   #In the Body of Postman our Lambdafunction will recieve json script once send
+       {
+    "operation": "create",
+    "tableName": "lambda-apigateway",
+    "payload": {
+        "Item": {
+            "id": "4",
+            "name": "John"
+        }
+    }
+}
+#6) Output created inputs into my dynamoDB table which
+#     I can view in the console.
+
+
+
+
+
+
+
+
+
+
+
+
+
